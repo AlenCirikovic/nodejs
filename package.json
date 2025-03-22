@@ -4,12 +4,14 @@
   "description": "",
   "main": "src/app.js",
   "scripts": {
-    "start": "node src/app.js"
+    "start": "npx nodemon"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "express": "^4.21.2",
+    "nodemon": "^3.1.9",
     "uuid": "^11.1.0"
   }
 }
+ 
