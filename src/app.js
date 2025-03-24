@@ -1,8 +1,11 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const Customer = require('./models/customer');
+const cors = require('cors');
+
 const app = express();
 mongoose.set('strictQuery',false);
+app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true}));
 
@@ -70,16 +73,83 @@ app.get('/api/customers/:id/', async(req,res)=>{
 
 });
 
+
+app.put('/api/customers/:id/', async(req,res)=>{
+    try{
+        const customerId = req.params.id;
+        const customer = await Customer.findOneAndReplace({_id:customerId},req.body,{new: true});
+        console.log(customer)
+        res.json({customer});
+    }catch(e){
+        console.log(e.message);
+        res.status(500).json({error: "something went wrong"});
+    }
+});
+
+app.patch('/api/customers/:id',async(req,res)=>{
+    try{
+        const customerId = req.params.id;
+        const customer = await Customer.findByIdAndUpdate({_id:customerId},req.body,{new: true});
+        console.log(customer)
+        res.json({customer});
+    }catch(e){
+        console.log(e.message);
+        res.status(500).json({error: "something went wrong"});
+    }
+});
+
+app.patch('/api/orders/:id', async(req,res)=>{
+    console.log(req.params);
+    const orderId = req.params.id;
+    req.body._id = orderId;
+    try{
+        const result = await Customer.findOneAndUpdate({'orders._id':orderId},{$set:{'orders.$':req.body}},{new:true});
+        console.log(result);
+        if(result){
+            res.json(result);
+        }else{
+            res.status(404).json({error:"Something went wrong"});
+        }
+    }catch(e){
+        console.log(e.message);
+        res.status(500).json({error: "Something went wrong!"});
+    }
+})
+
+app.patch('/api/orders/:id', async(req,res)=>{
+    try{
+        const result = await Customer.findOne({'orders._id':req.params.id});
+        if(result){
+            res.json(result);
+        }else{
+            res.status(404).json({error:"Something went wrong"});
+        }
+    }catch(e){
+        console.log(e.message);
+        res.status(500).json({error: "Something went wrong!"});
+
+    }
+});
+
+app.delete('/api/customers/:id/', async(req,res)=>{
+    try{
+        const customerId = req.params.id;
+        const result = await Customer.deleteOne({_id:customerId})
+        res.json({deletedCount: result.deletedCount});
+    }catch(e){
+        res.status(500).json({error:"Something went wrong"});
+    }
+
+})
+
+
 app.post('/',(req,res)=>{
     res.send('This is a post request!');
 })
 
 app.post('/api/customers', async (req,res) => {
     console.log(req.body);
-    const customer = new Customer({
-        name: req.body.name,
-        industry: req.body.industry
-    });
+    const customer = new Customer(req.body);
     try{
         await customer.save();
         res.status(201).json({customer});
@@ -88,6 +158,8 @@ app.post('/api/customers', async (req,res) => {
     }
 
 } );
+
+
 
 
 
